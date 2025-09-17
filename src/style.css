@@ -1,0 +1,7 @@
+/* 全局重置，去掉 body 默认 8px 外边距 */
+html, body, #app { height: 100%; }
+body { margin: 0; }
+html, body {
+  height: 100%;
+  overflow: hidden;   /* 禁止外层滚动 */
+}
