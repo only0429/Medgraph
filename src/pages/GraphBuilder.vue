@@ -184,10 +184,7 @@
             />
           </el-form-item>
         </el-form>
-        <div class="edit-hint">
-          <el-icon style="margin-right:6px"><Document/></el-icon>
-          将把以上字段写回 Neo4j 的属性：<code>name</code>、<code>tag</code>、<code>detail</code>
-        </div>
+        
       </div>
       <template #footer>
         <el-button @click="editVisible=false">取消</el-button>
