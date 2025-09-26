@@ -173,7 +173,7 @@
             <el-input v-model="editForm.name" placeholder="填写名称（name）" />
           </el-form-item>
           <el-form-item label="标签">
-            <el-input v-model="editForm.tag" placeholder="填写标签（tag）" />
+            <el-input v-model="editForm.tag" placeholder="填写标签（label）" />
           </el-form-item>
           <el-form-item label="细节">
             <el-input
