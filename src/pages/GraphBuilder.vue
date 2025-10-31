@@ -1468,17 +1468,26 @@ function createVisNode(node: any) {
     label: truncatedLabel,
     group: node.labels?.[0] ?? 'Node',
     shape: 'circle',
+    size: 35, // 统一节点大小
     font: {
       multi: true,
-      size: 12,
+      size: 11,
       face: 'arial',
       align: 'center'
     },
     widthConstraint: {
-      maximum: 120,
+      minimum: 70,
+      maximum: 70
     },
     heightConstraint: {
-      minimum: 40,
+      minimum: 70,
+      maximum: 70
+    },
+    margin: {
+      top: 10,
+      bottom: 10,
+      left: 10,
+      right: 10
     },
     __props: { ...node.properties }
   }
@@ -1496,14 +1505,23 @@ function createVisEdge(edge: any, from: string, to: string) {
 
 // 改进节点标签显示逻辑
 function truncateLabel(label: string): string {
-  if (label.length <= 10) {
-    return label;
+  // 移除多余空格并分割字符
+  const cleanLabel = label.replace(/\s+/g, '')
+  const chars = cleanLabel.split('')
+  
+  // 一行最多5个字，最多显示两行（共10个字）
+  if (chars.length <= 5) {
+    return chars.join('')
+  } else if (chars.length <= 10) {
+    const firstLine = chars.slice(0, 5).join('')
+    const secondLine = chars.slice(5, 10).join('')
+    return firstLine + '\n' + secondLine
+  } else {
+    const firstLine = chars.slice(0, 5).join('')
+    const secondLine = chars.slice(5, 9).join('') + '…' // 第二行显示4个字+省略号
+    return firstLine + '\n' + secondLine
   }
-  const firstLine = label.slice(0, 5);
-  const secondLine = label.slice(5, 9) + '...';
-  return firstLine + '\n' + secondLine;
 }
-
 function recordsToVis(records: any[]) {
   const nodes: any[] = [];
   const edges: any[] = [];
@@ -1552,23 +1570,93 @@ const driver = neo4j.driver(
 )
 
 /* 滚轮缩放：点击画布后开启 */
-const visOptions:any = { 
-  interaction:{ hover:true, tooltipDelay:120, dragView:true, zoomView:false }, 
-  physics:{ stabilization:true }, 
-  edges:{ arrows:'to' },
+// 最终改进的布局配置
+const visOptions: any = { 
+  interaction: { 
+    hover: true, 
+    tooltipDelay: 120, 
+    dragView: true, 
+    zoomView: false,
+    dragNodes: true,
+    selectable: true,
+    selectConnectedEdges: true,
+    multiselect: true
+  }, 
+  physics: {
+    enabled: true,
+    stabilization: {
+      iterations: 100,
+      updateInterval: 10
+    },
+    solver: 'forceAtlas2Based',
+    forceAtlas2Based: {
+      gravitationalConstant: -80,
+      centralGravity: 0.01,
+      springLength: 100, // 稍微减小弹簧长度
+      springConstant: 0.06,
+      damping: 0.4,
+      avoidOverlap: 0.9 // 增加避免重叠
+    }
+  },
+  edges: { 
+    arrows: 'to',
+    smooth: {
+      enabled: true,
+      type: 'continuous',
+      roundness: 0.5
+    },
+    color: {
+      color: '#848484',
+      highlight: '#ff5722',
+      hover: '#ff5722'
+    },
+    width: 1,
+    hoverWidth: 2
+  },
   nodes: {
     shape: 'circle',
+    size: 35, // 统一大小
     font: {
       multi: true,
-      size: 12,
+      size: 11, // 稍微减小字体大小
       face: 'arial',
-      align: 'center'
+      align: 'center',
+      color: '#2B2B2B'
     },
     widthConstraint: {
-      maximum: 120
+      minimum: 70,
+      maximum: 70
     },
     heightConstraint: {
-      minimum: 40
+      minimum: 70,
+      maximum: 70
+    },
+    margin: {
+      top: 10,
+      bottom: 10,
+      left: 10,
+      right: 10
+    },
+    borderWidth: 2,
+    borderWidthSelected: 4,
+    color: {
+      border: '#2B7CE9',
+      background: '#97C2FC',
+      highlight: {
+        border: '#2B7CE9',
+        background: '#D2E5FF'
+      },
+      hover: {
+        border: '#2B7CE9',
+        background: '#D2E5FF'
+      }
+    },
+    shadow: {
+      enabled: true,
+      color: 'rgba(0,0,0,0.2)',
+      size: 10,
+      x: 5,
+      y: 5
     }
   }
 }
