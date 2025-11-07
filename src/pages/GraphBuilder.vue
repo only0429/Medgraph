@@ -81,6 +81,57 @@
       </div>
     </section>
 
+    <!-- 节点选择状态提示条 -->
+    <div v-if="nodeSelectionMode" class="node-selection-overlay">
+      <div class="selection-status-bar">
+        <div class="status-content">
+          <el-alert
+            title="节点选择模式"
+            type="info"
+            :closable="false"
+            show-icon
+          >
+            <template #default>
+              <div class="selection-info">
+                <div class="selection-steps">
+                  <div :class="['step', { active: selectedNodes.from !== null }]">
+                    <span class="step-number">1</span>
+                    <span class="step-text">
+                      起始节点: 
+                      <span v-if="selectedNodes.from" class="node-info">
+                        {{ getNodeName(selectedNodes.from) }}
+                      </span>
+                      <span v-else class="placeholder">待选择</span>
+                    </span>
+                  </div>
+                  <div :class="['step', { active: selectedNodes.to !== null }]">
+                    <span class="step-number">2</span>
+                    <span class="step-text">
+                      目标节点: 
+                      <span v-if="selectedNodes.to" class="node-info">
+                        {{ getNodeName(selectedNodes.to) }}
+                      </span>
+                      <span v-else class="placeholder">待选择</span>
+                    </span>
+                  </div>
+                </div>
+                <div class="instructions">
+                  <el-icon><InfoFilled /></el-icon>
+                  <span>请在画布中点击两个不同的节点来创建关系</span>
+                </div>
+              </div>
+            </template>
+          </el-alert>
+        </div>
+        <div class="selection-actions">
+          <el-button size="small" @click="cancelNodeSelection">取消选择</el-button>
+          <el-button size="small" type="primary" @click="reselectNodes" :disabled="!selectedNodes.from && !selectedNodes.to">
+            重新选择
+          </el-button>
+        </div>
+      </div>
+    </div>
+
     <!-- 工作区 -->
     <transition name="fade-slide">
       <section class="card workspace-card" v-if="showWorkspace">
@@ -282,32 +333,96 @@
                       </div>
                     </section>
 
-                    <!-- 推荐修改 -->
-                    <section class="subcard rec-card">
-                      <header class="subcard-head" @click="toggleRecommendation">
-                        <div class="title">推荐修改</div>
-                        <el-tooltip
-                          :content="showRecommendation ? '收起推荐修改' : '展开推荐修改'"
-                          placement="top"
-                        >
-                          <el-button
-                            circle
-                            text
-                            class="sidebar-toggle-btn"
-                            :aria-label="showRecommendation ? '收起推荐修改' : '展开推荐修改'"
-                          >
-                            <el-icon :class="['chevron', { 'rotate-180': !showRecommendation }]">
-                              <ArrowDown />
-                            </el-icon>
-                          </el-button>
-                        </el-tooltip>
-                      </header>
-                      <div class="subcard-body rec-body" v-show="showRecommendation">
-                        <div class="recommendation-content">
-                          <p v-for="item in 5" :key="item" class="scrollbar-demo-item">推荐修改项 {{ item }}</p>
-                        </div>
-                      </div>
-                    </section>
+      <!-- 推荐修改部分 -->
+<section class="subcard rec-card">
+  <header class="subcard-head" @click="toggleRecommendation">
+    <div class="title">推荐修改</div>
+    <el-tooltip
+      :content="showRecommendation ? '收起推荐修改' : '展开推荐修改'"
+      placement="top"
+    >
+      <el-button
+        circle
+        text
+        class="sidebar-toggle-btn"
+        :aria-label="showRecommendation ? '收起推荐修改' : '展开推荐修改'"
+      >
+        <el-icon :class="['chevron', { 'rotate-180': !showRecommendation }]">
+          <ArrowDown />
+        </el-icon>
+      </el-button>
+    </el-tooltip>
+  </header>
+  <div class="subcard-body rec-body" v-show="showRecommendation">
+    <div class="recommendation-content">
+      <!-- 推荐修改列表 -->
+      <div class="recommendation-list">
+        <!-- 子图节点匹配信息 -->
+        <div class="match-section">
+          <div class="section-header">
+            <el-icon class="section-icon"><Connection /></el-icon>
+            <span class="section-title">疑似匹配节点</span>
+          </div>
+          <div class="section-content">
+            <div class="node-item">
+              <span class="node-label">子图节点5.6</span>
+              <span class="node-description">（患者是否能从静脉溶栓中获益？）</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 主图候选节点 -->
+        <div class="candidate-section">
+          <div class="section-header">
+            <el-icon class="section-icon"><View /></el-icon>
+            <span class="section-title">主图候选节点</span>
+          </div>
+          
+          <div class="candidate-list">
+            <!-- 候选节点1 -->
+            <div class="candidate-item">
+              <div class="candidate-info">
+                <span class="node-id">节点39</span>
+                <span class="node-name">静脉溶栓评估</span>
+              </div>
+              <div class="similarity-info">
+                <el-tag size="small" type="info">
+                  结构相似度: 0.125
+                </el-tag>
+              </div>
+            </div>
+
+            <!-- 候选节点2 -->
+            <div class="candidate-item">
+              <div class="candidate-info">
+                <span class="node-id">节点13</span>
+                <span class="node-name">对这些异常是否有疑问</span>
+              </div>
+              <div class="similarity-info">
+                <el-tag size="small" type="info">
+                  结构相似度: 0.125
+                </el-tag>
+              </div>
+            </div>
+
+            <!-- 候选节点3 -->
+            <div class="candidate-item">
+              <div class="candidate-info">
+                <span class="node-id">节点18</span>
+                <span class="node-name">是否有紧急指征</span>
+              </div>
+              <div class="similarity-info">
+                <el-tag size="small" type="info">
+                  结构相似度: 0.125
+                </el-tag>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
                   </div>
                 </div>
               </div>
@@ -376,29 +491,51 @@
     <!-- 添加关系弹窗 -->
     <el-dialog v-model="addEdgeDialogVisible" :title="`添加关系 - ${addEdgeTarget === 'main' ? '主图' : '子图'}`" width="600px" top="15vh">
       <div class="add-form">
+        <!-- 显示已选节点信息 -->
+        <div v-if="selectedNodes.from && selectedNodes.to" class="selected-nodes-info">
+          <el-alert
+            :title="`创建关系: ${getNodeName(selectedNodes.from)} → ${getNodeName(selectedNodes.to)}`"
+            type="success"
+            :closable="false"
+            show-icon
+          />
+        </div>
+
         <el-form :model="addEdgeForm" label-width="100px">
           <el-form-item label="起始节点" required>
-            <el-select v-model="addEdgeForm.from" placeholder="请选择起始节点" filterable style="width: 100%">
-              <el-option
-                v-for="node in availableNodes"
-                :key="node.id"
-                :label="node.label"
-                :value="node.id"
-              />
-            </el-select>
+            <div class="node-display">
+              <el-tag v-if="selectedNodes.from" type="success" class="node-tag">
+                {{ getNodeName(selectedNodes.from) }}
+              </el-tag>
+              <span v-else class="no-selection">未选择</span>
+              <el-button 
+                type="primary" 
+                text 
+                size="small"
+                @click="reselectNodes"
+              >
+                重新选择
+              </el-button>
+            </div>
           </el-form-item>
           <el-form-item label="关系类型" required>
             <el-input v-model="addEdgeForm.type" placeholder="请输入关系类型" />
           </el-form-item>
           <el-form-item label="目标节点" required>
-            <el-select v-model="addEdgeForm.to" placeholder="请选择目标节点" filterable style="width: 100%">
-              <el-option
-                v-for="node in availableNodes"
-                :key="node.id"
-                :label="node.label"
-                :value="node.id"
-              />
-            </el-select>
+            <div class="node-display">
+              <el-tag v-if="selectedNodes.to" type="warning" class="node-tag">
+                {{ getNodeName(selectedNodes.to) }}
+              </el-tag>
+              <span v-else class="no-selection">未选择</span>
+              <el-button 
+                type="primary" 
+                text 
+                size="small"
+                @click="reselectNodes"
+              >
+                重新选择
+              </el-button>
+            </div>
           </el-form-item>
           <el-form-item label="关系描述">
             <el-input v-model="addEdgeForm.description" type="textarea" :rows="2" placeholder="请输入关系描述" />
@@ -406,8 +543,8 @@
         </el-form>
       </div>
       <template #footer>
-        <el-button @click="addEdgeDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="addingEdge" @click="confirmAddEdge">添加</el-button>
+        <el-button @click="addEdgeDialogVisible = false; exitNodeSelectionMode()">取消</el-button>
+        <el-button type="primary" :loading="addingEdge" @click="confirmAddEdge">添加关系</el-button>
       </template>
     </el-dialog>
 
@@ -477,7 +614,12 @@ import {
   ArrowDown,
   Search,
   Connection,
-  RefreshLeft
+  RefreshLeft,
+  InfoFilled,
+  Warning,
+  Check,
+  Close,
+  View
 } from '@element-plus/icons-vue'
 import type { UploadFile, UploadUserFile, UploadRawFile } from 'element-plus'
 import { Network } from 'vis-network/standalone'
@@ -503,6 +645,292 @@ const toggleRecommendation = () => {
 // 融合按钮点击处理
 const handleFusion = () => {
   ElMessage.info('融合功能开发中...')
+}
+
+/* 添加关系 - 改进的节点选择功能 */
+const nodeSelectionMode = ref(false)
+const selectedNodes = ref<{from: string | null, to: string | null}>({
+  from: null,
+  to: null
+})
+
+// 修改添加关系弹窗的打开逻辑
+function showAddEdgeDialog(target: 'main' | 'sub') {
+  addEdgeTarget.value = target
+  addEdgeForm.value = { from: '', to: '', type: '', description: '' }
+  
+  // 先不打开弹窗，而是进入节点选择模式
+  enterNodeSelectionMode()
+  ElMessage.info('请先选择两个节点：第一个作为起始节点，第二个作为目标节点')
+}
+
+// 进入节点选择模式
+function enterNodeSelectionMode() {
+  nodeSelectionMode.value = true
+  selectedNodes.value = { from: null, to: null }
+  
+  // 设置网络交互选项，突出显示可点击的节点
+  const network = addEdgeTarget.value === 'main' ? mainNetwork : subNetwork
+  if (network) {
+    network.setOptions({
+      interaction: {
+        ...visOptions.interaction,
+        selectable: true,
+        multiselect: false
+      }
+    })
+    
+    // 添加点击事件监听
+    network.off('click', handleNodeSelectionClick) // 先移除旧的监听
+    network.on('click', handleNodeSelectionClick)
+    
+    // 高亮所有节点，提示用户可以选择
+    highlightSelectableNodes()
+  }
+}
+
+// 退出节点选择模式
+function exitNodeSelectionMode() {
+  nodeSelectionMode.value = false
+  selectedNodes.value = { from: null, to: null }
+  
+  // 恢复网络交互选项
+  const network = addEdgeTarget.value === 'main' ? mainNetwork : subNetwork
+  if (network) {
+    network.setOptions(visOptions)
+    network.off('click', handleNodeSelectionClick)
+    resetNodeHighlights()
+    
+    // 重新绑定编辑点击事件
+    const nodesDS = addEdgeTarget.value === 'main' ? mainNodesDS : subNodesDS
+    const edgesDS = addEdgeTarget.value === 'main' ? mainEdgesDS : subEdgesDS
+    bindEditOnClick(network, nodesDS, edgesDS)
+  }
+}
+
+// 处理节点选择点击
+function handleNodeSelectionClick(params: any) {
+  if (!nodeSelectionMode.value) return
+  
+  const network = addEdgeTarget.value === 'main' ? mainNetwork : subNetwork
+  const nodesDS = addEdgeTarget.value === 'main' ? mainNodesDS : subNodesDS
+  
+  if (!network || !nodesDS || params.nodes.length === 0) return
+  
+  const clickedNodeId = params.nodes[0]
+  
+  // 如果点击的是已选中的节点，则取消选择
+  if (selectedNodes.value.from === clickedNodeId) {
+    selectedNodes.value.from = null
+    resetNodeHighlight(clickedNodeId)
+    ElMessage.info('已取消选择起始节点，请重新选择')
+    return
+  }
+  
+  if (selectedNodes.value.to === clickedNodeId) {
+    selectedNodes.value.to = null
+    resetNodeHighlight(clickedNodeId)
+    ElMessage.info('已取消选择目标节点，请重新选择')
+    return
+  }
+  
+  // 选择节点
+  if (selectedNodes.value.from === null) {
+    // 选择第一个节点（起始节点）
+    selectedNodes.value.from = clickedNodeId
+    highlightSelectedNode(clickedNodeId, 'from')
+    ElMessage.info('已选择起始节点，请点击目标节点')
+  } else if (selectedNodes.value.to === null) {
+    // 选择第二个节点（目标节点）
+    selectedNodes.value.to = clickedNodeId
+    highlightSelectedNode(clickedNodeId, 'to')
+    
+    // 两个节点都选择完成，现在打开弹窗
+    openEdgeDialogWithSelectedNodes()
+  }
+}
+
+// 使用已选节点打开关系弹窗
+function openEdgeDialogWithSelectedNodes() {
+  const nodesDS = addEdgeTarget.value === 'main' ? mainNodesDS : subNodesDS
+  if (!nodesDS || !selectedNodes.value.from || !selectedNodes.value.to) return
+  
+  const fromNode = nodesDS.get(selectedNodes.value.from)
+  const toNode = nodesDS.get(selectedNodes.value.to)
+  
+  if (fromNode && toNode) {
+    // 填充表单
+    addEdgeForm.value.from = selectedNodes.value.from
+    addEdgeForm.value.to = selectedNodes.value.to
+    
+    // 自动生成关系类型（可选）
+    const fromLabel = fromNode.group || 'Node'
+    const toLabel = toNode.group || 'Node'
+    addEdgeForm.value.type = `${fromLabel}_TO_${toLabel}`.toUpperCase()
+    
+    // 显示节点信息
+    const fromName = fromNode.label || fromNode.__props?.name || '未知节点'
+    const toName = toNode.label || toNode.__props?.name || '未知节点'
+    
+    // 打开弹窗
+    addEdgeDialogVisible.value = true
+    ElMessage.success(`已选择: ${fromName} → ${toName}`)
+  }
+}
+
+// 获取节点名称
+function getNodeName(nodeId: string) {
+  const nodesDS = addEdgeTarget.value === 'main' ? mainNodesDS : subNodesDS
+  if (!nodesDS) return '未知节点'
+  
+  const node = nodesDS.get(nodeId)
+  return node?.label || node?.__props?.name || '未知节点'
+}
+
+// 取消节点选择
+function cancelNodeSelection() {
+  exitNodeSelectionMode()
+  ElMessage.info('已取消节点选择')
+}
+
+// 重新选择节点
+function reselectNodes() {
+  exitNodeSelectionMode()
+  addEdgeDialogVisible.value = false
+  setTimeout(() => {
+    showAddEdgeDialog(addEdgeTarget.value)
+  }, 100)
+}
+
+// 高亮可选择的节点
+function highlightSelectableNodes() {
+  const nodesDS = addEdgeTarget.value === 'main' ? mainNodesDS : subNodesDS
+  if (!nodesDS) return
+  
+  nodesDS.forEach((node: any) => {
+    const updateData: any = {
+      id: node.id,
+      color: {
+        background: '#e3f2fd',
+        border: '#2196f3',
+        highlight: {
+          background: '#bbdefb',
+          border: '#2196f3'
+        }
+      },
+      borderWidth: 3,
+      shadow: {
+        enabled: true,
+        color: 'rgba(33,150,243,0.3)',
+        size: 15
+      },
+      font: {
+        color: '#2B2B2B',
+        size: 12,
+        face: 'arial',
+        multi: true
+      }
+    }
+    nodesDS.update(updateData)
+  })
+}
+
+// 高亮选中的节点
+function highlightSelectedNode(nodeId: string, type: 'from' | 'to') {
+  const nodesDS = addEdgeTarget.value === 'main' ? mainNodesDS : subNodesDS
+  if (!nodesDS) return
+  
+  const color = type === 'from' ? {
+    background: '#4caf50',
+    border: '#2e7d32',
+    highlight: {
+      background: '#81c784',
+      border: '#2e7d32'
+    }
+  } : {
+    background: '#ff9800',
+    border: '#ef6c00',
+    highlight: {
+      background: '#ffb74d',
+      border: '#ef6c00'
+    }
+  }
+  
+  const updateData: any = {
+    id: nodeId,
+    color: color,
+    borderWidth: 4,
+    font: {
+      color: '#000000',
+      size: 14,
+      face: 'arial',
+      multi: true
+    },
+    shadow: {
+      enabled: true,
+      color: type === 'from' ? 'rgba(76,175,80,0.4)' : 'rgba(255,152,0,0.4)',
+      size: 20
+    }
+  }
+  
+  nodesDS.update(updateData)
+}
+
+// 重置节点高亮
+function resetNodeHighlight(nodeId: string) {
+  const nodesDS = addEdgeTarget.value === 'main' ? mainNodesDS : subNodesDS
+  if (!nodesDS) return
+  
+  const node = nodesDS.get(nodeId)
+  if (node) {
+    const updateData: any = {
+      id: nodeId,
+      color: {
+        background: '#e3f2fd',
+        border: '#2196f3',
+        highlight: {
+          background: '#bbdefb',
+          border: '#2196f3'
+        }
+      },
+      borderWidth: 3,
+      font: {
+        color: '#2B2B2B',
+        size: 12,
+        face: 'arial',
+        multi: true
+      }
+    }
+    nodesDS.update(updateData)
+  }
+}
+
+// 重置所有节点高亮
+function resetNodeHighlights() {
+  const nodesDS = addEdgeTarget.value === 'main' ? mainNodesDS : subNodesDS
+  if (!nodesDS) return
+  
+  nodesDS.forEach((node: any) => {
+    const updateData: any = {
+      id: node.id,
+      color: undefined,
+      borderWidth: 2,
+      font: {
+        color: '#2B2B2B',
+        size: 12,
+        face: 'arial',
+        multi: true
+      },
+      shadow: {
+        enabled: true,
+        color: 'rgba(0,0,0,0.2)',
+        size: 10,
+        x: 5,
+        y: 5
+      }
+    }
+    nodesDS.update(updateData)
+  })
 }
 
 /* 撤销功能 - 专门修复关系恢复问题 */
@@ -952,12 +1380,7 @@ const availableNodes = computed(() => {
   return nodes
 })
 
-function showAddEdgeDialog(target: 'main' | 'sub') {
-  addEdgeTarget.value = target
-  addEdgeForm.value = { from: '', to: '', type: '', description: '' }
-  addEdgeDialogVisible.value = true
-}
-
+// 修改确认添加关系的函数
 async function confirmAddEdge() {
   if (!addEdgeForm.value.from || !addEdgeForm.value.to) {
     ElMessage.warning('请选择起始节点和目标节点')
@@ -1008,6 +1431,7 @@ async function confirmAddEdge() {
 
     ElMessage.success('关系添加成功')
     addEdgeDialogVisible.value = false
+    exitNodeSelectionMode() // 在成功后退出选择模式
 
     // 同时刷新图以确保数据一致性
     if (addEdgeTarget.value === 'main') {
@@ -1782,6 +2206,7 @@ onBeforeUnmount(async () => {
     if (clickTimer.value) {
       clearTimeout(clickTimer.value);
     }
+    exitNodeSelectionMode()
   } catch {}
   if(previewUrl.value) URL.revokeObjectURL(previewUrl.value)
   mainNetwork?.destroy(); subNetwork?.destroy()
@@ -1838,6 +2263,128 @@ const subContentColStyle = computed(() => {
 .thumb:hover{box-shadow:0 0 0 2px rgba(59,130,246,.2) inset;}
 .thumb-img{width:100%;height:120px;object-fit:cover;display:block;background:#f3f4f6;}
 .thumb-name{font-size:12px;padding:8px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* 节点选择覆盖层 */
+.node-selection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #e4e7ed;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.selection-status-bar {
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.status-content {
+  flex: 1;
+}
+
+.selection-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selection-steps {
+  display: flex;
+  gap: 20px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #f5f7fa;
+  transition: all 0.3s ease;
+}
+
+.step.active {
+  background: #ecf5ff;
+  border: 1px solid #409eff;
+}
+
+.step-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #c0c4cc;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.step.active .step-number {
+  background: #409eff;
+}
+
+.step-text {
+  font-size: 14px;
+  color: #606266;
+}
+
+.step.active .step-text {
+  color: #409eff;
+  font-weight: 500;
+}
+
+.node-info {
+  font-weight: 600;
+  color: #303133;
+}
+
+.placeholder {
+  color: #909399;
+  font-style: italic;
+}
+
+.instructions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #606266;
+}
+
+.selection-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* 弹窗内的样式 */
+.selected-nodes-info {
+  margin-bottom: 16px;
+}
+
+.node-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.node-tag {
+  font-size: 14px;
+  padding: 4px 12px;
+}
+
+.no-selection {
+  color: #c0c4cc;
+  font-style: italic;
+}
 
 .main-panel {display:flex;flex-direction:column;height:100%;}
 .panel-wrap{display:flex;flex-direction:column;}
@@ -1903,16 +2450,128 @@ const subContentColStyle = computed(() => {
 .fade-slide-leave-active{transition:all .2s ease;}
 .fade-slide-enter-from,.fade-slide-leave-to{opacity:0;transform:translateY(8px);}
 
-/* 统一按钮大小样式 */
-.uniform-button {
-  min-width: 90px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
+/* 推荐修改样式 */
+.recommendation-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
 }
 
-:deep(.el-upload-dragger .el-icon--upload){font-size:48px;}
-:deep(.el-upload-dragger .el-icon--upload svg){width:1em;height:1em;}
+.recommendation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.match-section, .candidate-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  padding: 16px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+}
+
+.section-icon {
+  color: #409eff;
+}
+
+.section-content {
+  padding-left: 24px;
+}
+
+.node-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: white;
+  border-radius: 6px;
+  border-left: 4px solid #67c23a;
+}
+
+.node-label {
+  font-weight: 600;
+  color: #67c23a;
+  font-size: 14px;
+}
+
+.node-description {
+  color: #606266;
+  font-size: 14px;
+}
+
+.candidate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.candidate-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s ease;
+}
+
+.candidate-item:hover {
+  border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+}
+
+.candidate-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.candidate-info .node-id {
+  font-weight: 600;
+  color: #409eff;
+  min-width: 60px;
+  font-size: 14px;
+}
+
+.candidate-info .node-name {
+  color: #606266;
+  font-size: 14px;
+  flex: 1;
+}
+
+.similarity-info {
+  display: flex;
+  align-items: center;
+}
+
+/* 滚动条样式 */
+.recommendation-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.recommendation-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.recommendation-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.recommendation-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
 </style>
