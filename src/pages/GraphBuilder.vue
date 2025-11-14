@@ -488,65 +488,80 @@
       </template>
     </el-dialog>
 
-    <!-- 添加关系弹窗 -->
-    <el-dialog v-model="addEdgeDialogVisible" :title="`添加关系 - ${addEdgeTarget === 'main' ? '主图' : '子图'}`" width="600px" top="15vh">
-      <div class="add-form">
-        <!-- 显示已选节点信息 -->
-        <div v-if="selectedNodes.from && selectedNodes.to" class="selected-nodes-info">
-          <el-alert
-            :title="`创建关系: ${getNodeName(selectedNodes.from)} → ${getNodeName(selectedNodes.to)}`"
-            type="success"
-            :closable="false"
-            show-icon
-          />
-        </div>
+   <!-- 修改添加关系弹窗 -->
+<el-dialog v-model="addEdgeDialogVisible" :title="`添加关系 - ${addEdgeTarget === 'main' ? '主图' : '子图'}`" width="600px" top="15vh">
+  <div class="add-form">
+    <!-- 显示已选节点信息 -->
+    <div v-if="selectedNodes.from && selectedNodes.to" class="selected-nodes-info">
+      <el-alert
+        :title="`创建关系: ${getNodeName(selectedNodes.from)} → ${getNodeName(selectedNodes.to)}`"
+        type="success"
+        :closable="false"
+        show-icon
+      />
+    </div>
 
-        <el-form :model="addEdgeForm" label-width="100px">
-          <el-form-item label="起始节点" required>
-            <div class="node-display">
-              <el-tag v-if="selectedNodes.from" type="success" class="node-tag">
-                {{ getNodeName(selectedNodes.from) }}
-              </el-tag>
-              <span v-else class="no-selection">未选择</span>
-              <el-button 
-                type="primary" 
-                text 
-                size="small"
-                @click="reselectNodes"
-              >
-                重新选择
-              </el-button>
-            </div>
-          </el-form-item>
-          <el-form-item label="关系类型" required>
-            <el-input v-model="addEdgeForm.type" placeholder="请输入关系类型" />
-          </el-form-item>
-          <el-form-item label="目标节点" required>
-            <div class="node-display">
-              <el-tag v-if="selectedNodes.to" type="warning" class="node-tag">
-                {{ getNodeName(selectedNodes.to) }}
-              </el-tag>
-              <span v-else class="no-selection">未选择</span>
-              <el-button 
-                type="primary" 
-                text 
-                size="small"
-                @click="reselectNodes"
-              >
-                重新选择
-              </el-button>
-            </div>
-          </el-form-item>
-          <el-form-item label="关系描述">
-            <el-input v-model="addEdgeForm.description" type="textarea" :rows="2" placeholder="请输入关系描述" />
-          </el-form-item>
-        </el-form>
-      </div>
-      <template #footer>
-        <el-button @click="addEdgeDialogVisible = false; exitNodeSelectionMode()">取消</el-button>
-        <el-button type="primary" :loading="addingEdge" @click="confirmAddEdge">添加关系</el-button>
-      </template>
-    </el-dialog>
+    <el-form :model="addEdgeForm" label-width="100px">
+      <el-form-item label="起始节点" required>
+        <div class="node-display">
+          <el-tag v-if="selectedNodes.from" type="success" class="node-tag">
+            {{ getNodeName(selectedNodes.from) }}
+          </el-tag>
+          <span v-else class="no-selection">未选择</span>
+          <el-button 
+            type="primary" 
+            text 
+            size="small"
+            @click="reselectNodes"
+          >
+            重新选择
+          </el-button>
+        </div>
+      </el-form-item>
+      
+      <el-form-item label="关系类型" required>
+        <el-select 
+          v-model="addEdgeForm.type" 
+          placeholder="请选择关系类型"
+          style="width: 100%"
+          clearable
+        >
+          <el-option
+            v-for="option in relationTypeOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+      </el-form-item>
+      
+      <el-form-item label="目标节点" required>
+        <div class="node-display">
+          <el-tag v-if="selectedNodes.to" type="warning" class="node-tag">
+            {{ getNodeName(selectedNodes.to) }}
+          </el-tag>
+          <span v-else class="no-selection">未选择</span>
+          <el-button 
+            type="primary" 
+            text 
+            size="small"
+            @click="reselectNodes"
+          >
+            重新选择
+          </el-button>
+        </div>
+      </el-form-item>
+      
+      <el-form-item label="关系描述">
+        <el-input v-model="addEdgeForm.description" type="textarea" :rows="2" placeholder="请输入关系描述" />
+      </el-form-item>
+    </el-form>
+  </div>
+  <template #footer>
+    <el-button @click="addEdgeDialogVisible = false; exitNodeSelectionMode()">取消</el-button>
+    <el-button type="primary" :loading="addingEdge" @click="confirmAddEdge">添加关系</el-button>
+  </template>
+</el-dialog>
 
     <!-- 子图重命名弹窗 -->
     <el-dialog v-model="renameDialogVisible" title="重命名子图" width="500px" top="20vh">
@@ -629,6 +644,98 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 /* 显隐上传区 */
 const showUploader = ref(true)
+const relationTypeOptions = [
+  { label: 'A1_1', value: 'A1_1' },
+  { label: '1_A1', value: '1_A1' }
+]
+
+/* 节点业务类型颜色映射 */
+const NODE_TYPE_COLOR_MAP: Record<string, any> = {
+  检测: {
+    background: '#E3F2FD',   // 浅蓝
+    border: '#1E88E5',
+    highlight: {
+      background: '#BBDEFB',
+      border: '#1565C0'
+    },
+    hover: {
+      background: '#E3F2FD',
+      border: '#1E88E5'
+    }
+  },
+  疾病: {
+    background: '#FFEBEE',   // 浅红
+    border: '#E53935',
+    highlight: {
+      background: '#FFCDD2',
+      border: '#C62828'
+    },
+    hover: {
+      background: '#FFEBEE',
+      border: '#E53935'
+    }
+  },
+  判断: {
+    background: '#F3E5F5',   // 紫色
+    border: '#8E24AA',
+    highlight: {
+      background: '#E1BEE7',
+      border: '#6A1B9A'
+    },
+    hover: {
+      background: '#F3E5F5',
+      border: '#8E24AA'
+    }
+  },
+  时间: {
+    background: '#E0F2F1',   // 青绿
+    border: '#00897B',
+    highlight: {
+      background: '#B2DFDB',
+      border: '#00695C'
+    },
+    hover: {
+      background: '#E0F2F1',
+      border: '#00897B'
+    }
+  },
+  治疗: {
+    background: '#E8F5E9',   // 绿色
+    border: '#43A047',
+    highlight: {
+      background: '#C8E6C9',
+      border: '#2E7D32'
+    },
+    hover: {
+      background: '#E8F5E9',
+      border: '#43A047'
+    }
+  },
+  症状: {
+    background: '#FFF3E0',   // 橙色
+    border: '#FB8C00',
+    highlight: {
+      background: '#FFE0B2',
+      border: '#EF6C00'
+    },
+    hover: {
+      background: '#FFF3E0',
+      border: '#FB8C00'
+    }
+  }
+}
+
+// 根据业务 label 应用颜色
+function applyNodeColor(nodeObj: any, typeLabel: string) {
+  const color = NODE_TYPE_COLOR_MAP[typeLabel]
+  if (!color) return nodeObj
+  return {
+    ...nodeObj,
+    color: color
+  }
+}
+
+
 
 /* 边栏收起状态 */
 const sidebarCollapsed = ref(false)
@@ -709,25 +816,34 @@ function exitNodeSelectionMode() {
 }
 
 // 处理节点选择点击
+// 修改 handleNodeSelectionClick 函数
 function handleNodeSelectionClick(params: any) {
   if (!nodeSelectionMode.value) return
   
   const network = addEdgeTarget.value === 'main' ? mainNetwork : subNetwork
   const nodesDS = addEdgeTarget.value === 'main' ? mainNodesDS : subNodesDS
   
-  if (!network || !nodesDS || params.nodes.length === 0) return
+  // 添加空值检查
+  if (!network || !nodesDS || !params.nodes || params.nodes.length === 0) return
   
-  const clickedNodeId = params.nodes[0]
+  // 添加类型断言
+  const clickedNodeId = params.nodes[0] as string
+  const clickedNode = nodesDS.get(clickedNodeId)
+  
+  if (!clickedNode) return
+  
+  // 直接使用节点的 ID，添加类型断言
+  const nodeElementId = (clickedNode.id as string)
   
   // 如果点击的是已选中的节点，则取消选择
-  if (selectedNodes.value.from === clickedNodeId) {
+  if (selectedNodes.value.from === nodeElementId) {
     selectedNodes.value.from = null
     resetNodeHighlight(clickedNodeId)
     ElMessage.info('已取消选择起始节点，请重新选择')
     return
   }
   
-  if (selectedNodes.value.to === clickedNodeId) {
+  if (selectedNodes.value.to === nodeElementId) {
     selectedNodes.value.to = null
     resetNodeHighlight(clickedNodeId)
     ElMessage.info('已取消选择目标节点，请重新选择')
@@ -736,21 +852,19 @@ function handleNodeSelectionClick(params: any) {
   
   // 选择节点
   if (selectedNodes.value.from === null) {
-    // 选择第一个节点（起始节点）
-    selectedNodes.value.from = clickedNodeId
+    selectedNodes.value.from = nodeElementId
     highlightSelectedNode(clickedNodeId, 'from')
     ElMessage.info('已选择起始节点，请点击目标节点')
   } else if (selectedNodes.value.to === null) {
-    // 选择第二个节点（目标节点）
-    selectedNodes.value.to = clickedNodeId
+    selectedNodes.value.to = nodeElementId
     highlightSelectedNode(clickedNodeId, 'to')
     
     // 两个节点都选择完成，现在打开弹窗
     openEdgeDialogWithSelectedNodes()
   }
 }
-
 // 使用已选节点打开关系弹窗
+// 修改 openEdgeDialogWithSelectedNodes 函数，移除自动生成关系类型的逻辑
 function openEdgeDialogWithSelectedNodes() {
   const nodesDS = addEdgeTarget.value === 'main' ? mainNodesDS : subNodesDS
   if (!nodesDS || !selectedNodes.value.from || !selectedNodes.value.to) return
@@ -763,10 +877,8 @@ function openEdgeDialogWithSelectedNodes() {
     addEdgeForm.value.from = selectedNodes.value.from
     addEdgeForm.value.to = selectedNodes.value.to
     
-    // 自动生成关系类型（可选）
-    const fromLabel = fromNode.group || 'Node'
-    const toLabel = toNode.group || 'Node'
-    addEdgeForm.value.type = `${fromLabel}_TO_${toLabel}`.toUpperCase()
+    // 不再自动生成关系类型，让用户从下拉框选择
+    addEdgeForm.value.type = '' // 清空类型，让用户选择
     
     // 显示节点信息
     const fromName = fromNode.label || fromNode.__props?.name || '未知节点'
@@ -1251,9 +1363,9 @@ function resetSearchHighlight(graphType: 'main' | 'sub') {
 
   if (nodesDS) {
     nodesDS.forEach((node: any) => {
-      const updateData: any = {
+      const typeLabel: string = node.__props?.label || node.group || ''
+      const baseUpdate: any = {
         id: node.id,
-        color: undefined,
         font: {
           color: '#2B2B2B',
           size: 12,
@@ -1261,7 +1373,16 @@ function resetSearchHighlight(graphType: 'main' | 'sub') {
           multi: true
         }
       }
-      nodesDS.update(updateData)
+
+      // 按 label 恢复颜色
+      const color = NODE_TYPE_COLOR_MAP[typeLabel]
+      if (color) {
+        baseUpdate.color = color
+      } else {
+        baseUpdate.color = undefined
+      }
+
+      nodesDS.update(baseUpdate)
     })
   }
 
@@ -1280,6 +1401,7 @@ function resetSearchHighlight(graphType: 'main' | 'sub') {
     })
   }
 }
+
 
 /* 添加节点功能 */
 const addNodeDialogVisible = ref(false)
@@ -1307,7 +1429,7 @@ async function confirmAddNode() {
   addingNode.value = true
   const session = driver.session({ defaultAccessMode: neo4j.session.WRITE, database: 'neo4j' })
   
-  try {
+try {
     const label = addNodeForm.value.type || 'Node'
     const properties = {
       name: addNodeForm.value.name,
@@ -1316,20 +1438,25 @@ async function confirmAddNode() {
       created: new Date().toISOString()
     }
 
+    // 确保返回 elementId
     const result = await session.run(
-      `CREATE (n:${label}) SET n = $props RETURN n`,
+      `CREATE (n:${label}) SET n = $props RETURN elementId(n) as elementId, n`,
       { props: properties }
     )
 
+    const elementId = result.records[0]?.get('elementId')
     const createdNode = result.records[0]?.get('n')
-    if (createdNode) {
+    
+    if (elementId && createdNode) {
       recordOperation(addNodeTarget.value, {
         type: 'add_node',
-        data: { nodeId: createdNode.elementId }
+        data: { nodeId: elementId }
       })
 
-      // 立即将新节点添加到图中
+      // 创建 Vis 节点时，确保使用 Neo4j 的 elementId 作为 ID
       const visNode = createVisNode(createdNode)
+      visNode.id = elementId // 强制使用 elementId
+      
       if (addNodeTarget.value === 'main' && mainNodesDS) {
         mainNodesDS.add(visNode)
       } else if (addNodeTarget.value === 'sub' && subNodesDS) {
@@ -1338,9 +1465,9 @@ async function confirmAddNode() {
     }
 
     ElMessage.success('节点添加成功')
-    addNodeDialogVisible.value = false
+    addEdgeDialogVisible.value = false
 
-    // 同时刷新图以确保数据一致性
+    // 刷新图以确保数据一致性
     if (addNodeTarget.value === 'main') {
       await renderMainGraph()
     } else {
@@ -1361,7 +1488,7 @@ const addEdgeTarget = ref<'main' | 'sub'>('main')
 const addEdgeForm = ref({
   from: '',
   to: '',
-  type: '',
+  type: '', // 将用于存储选择的关系类型
   description: ''
 })
 const addingEdge = ref(false)
@@ -1381,14 +1508,15 @@ const availableNodes = computed(() => {
 })
 
 // 修改确认添加关系的函数
+// 修改 confirmAddEdge 函数中的关系类型处理部分
 async function confirmAddEdge() {
   if (!addEdgeForm.value.from || !addEdgeForm.value.to) {
     ElMessage.warning('请选择起始节点和目标节点')
     return
   }
 
-  if (!addEdgeForm.value.type.trim()) {
-    ElMessage.warning('请输入关系类型')
+  if (!addEdgeForm.value.type) {
+    ElMessage.warning('请选择关系类型')
     return
   }
 
@@ -1401,10 +1529,15 @@ async function confirmAddEdge() {
       created: new Date().toISOString()
     }
 
+    // 直接使用选择的关系类型，不需要清理
+    const relationType = addEdgeForm.value.type
+    
+    // 使用参数化查询
     const result = await session.run(
       `MATCH (a), (b) 
        WHERE elementId(a) = $fromId AND elementId(b) = $toId 
-       CREATE (a)-[r:${addEdgeForm.value.type.toUpperCase()} $props]->(b) 
+       CREATE (a)-[r:\`${relationType}\`]->(b) 
+       SET r = $props
        RETURN r`,
       { 
         fromId: addEdgeForm.value.from,
@@ -1413,12 +1546,16 @@ async function confirmAddEdge() {
       }
     )
 
+    if (result.records.length === 0) {
+      throw new Error('关系创建失败，请检查节点ID是否正确')
+    }
+
     const createdEdge = result.records[0]?.get('r')
     if (createdEdge) {
       recordOperation(addEdgeTarget.value, {
         type: 'add_edge',
         data: { edgeId: createdEdge.elementId }
-      })
+    })
 
       // 立即将新关系添加到图中
       const visEdge = createVisEdge(createdEdge, addEdgeForm.value.from, addEdgeForm.value.to)
@@ -1431,7 +1568,7 @@ async function confirmAddEdge() {
 
     ElMessage.success('关系添加成功')
     addEdgeDialogVisible.value = false
-    exitNodeSelectionMode() // 在成功后退出选择模式
+    exitNodeSelectionMode()
 
     // 同时刷新图以确保数据一致性
     if (addEdgeTarget.value === 'main') {
@@ -1441,12 +1578,14 @@ async function confirmAddEdge() {
     }
   } catch (error) {
     console.error('添加关系失败:', error)
-    ElMessage.error('添加关系失败')
+    const errorMsg = error instanceof Error ? error.message : '未知错误'
+    ElMessage.error(`添加关系失败: ${errorMsg}`)
   } finally {
     await session.close()
     addingEdge.value = false
   }
 }
+
 
 /* 删除功能 - 修复版本 */
 async function handleDeleteSelected(target: 'main' | 'sub') {
@@ -1884,15 +2023,23 @@ function cypherOf(preset: string){
 
 // 改进节点和边的创建函数
 function createVisNode(node: any) {
-  const label = node.properties?.name || node.properties?.title || (node.labels?.[0] ?? 'Node')
-  const truncatedLabel = truncateLabel(label)
+  // 文本显示仍然优先 name / title
+  const nameOrTitle =
+    node.properties?.name ||
+    node.properties?.title ||
+    (node.labels?.[0] ?? 'Node')
 
-  return {
-    id: node.elementId,
+  const truncatedLabel = truncateLabel(nameOrTitle)
+
+  // 业务类型（检测 / 疾病 / 判断 / 时间 / 治疗 / 症状）
+  const typeLabel: string = node.properties?.label || ''
+
+  // 基础节点配置
+  let visNode: any = {
+    id: node.elementId, // 使用 Neo4j 的 elementId
     label: truncatedLabel,
-    group: node.labels?.[0] ?? 'Node',
-    shape: 'circle',
-    size: 35, // 统一节点大小
+    shape: 'circle',    // 保持形状不变
+    size: 35,
     font: {
       multi: true,
       size: 11,
@@ -1913,9 +2060,19 @@ function createVisNode(node: any) {
       left: 10,
       right: 10
     },
-    __props: { ...node.properties }
+    __props: {
+      // Neo4j 原始属性
+      ...node.properties,
+      __neo4jLabels: node.labels
+    }
   }
+
+  // ★ 只根据业务 label 设置颜色
+  visNode = applyNodeColor(visNode, typeLabel)
+
+  return visNode
 }
+
 
 function createVisEdge(edge: any, from: string, to: string) {
   return {
@@ -2455,6 +2612,7 @@ const subContentColStyle = computed(() => {
   flex: 1;
   overflow-y: auto;
   padding: 12px;
+  
 }
 
 .recommendation-list {

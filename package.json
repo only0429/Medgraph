@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
-    "axios": "^1.12.1",
+    "axios": "^1.13.2",
     "docx-preview": "^0.3.6",
     "element-plus": "^2.10.7",
     "neo4j-driver": "^5.28.1",
